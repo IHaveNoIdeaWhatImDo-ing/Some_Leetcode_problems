@@ -121,7 +121,10 @@ vector<long long> minTimeMaxPower(
 
     bool shortestPath {false};
 
-    memset(dist, 0xFF, n * 1001 * sizeof(uint64));
+    for (int j = 0; j < n; ++j)
+    {
+        memset(&dist[j][0], 0xFF, (power + 1) * sizeof(uint64));
+    }
     dist[source][0] = 0ull;
 
     adjList.clear();
@@ -166,7 +169,7 @@ vector<long long> minTimeMaxPower(
         }
 
         nextPower = temp.power + cost[temp.node];
-        if (temp.node == target || nextPower > power || dist[temp.node][temp.power] < temp.time)
+        if (nextPower > power || dist[temp.node][temp.power] < temp.time)
         {
             continue;
         }
