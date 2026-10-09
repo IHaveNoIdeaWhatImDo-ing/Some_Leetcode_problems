@@ -169,7 +169,11 @@ vector<long long> minTimeMaxPower(
         }
 
         nextPower = temp.power + cost[temp.node];
-        if (nextPower > power || dist[temp.node][temp.power] < temp.time)
+        if (
+            nextPower > power ||
+            dist[temp.node][temp.power] < temp.time ||
+            (shortestPath && temp.time != static_cast<uint64>(res[0]))
+        )
         {
             continue;
         }
