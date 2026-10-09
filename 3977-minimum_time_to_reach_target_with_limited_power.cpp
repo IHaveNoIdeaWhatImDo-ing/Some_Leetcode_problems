@@ -49,9 +49,14 @@ Constraints:
     0 <= source, target <= n - 1
 */
 
+static int AT(int i, int j, int pow)
+{
+    return i * (pow + 1) + j;
+}
+
 using uint64 = unsigned long long;
 
-static uint64 dist[1000][1001]; // distance and power left
+static uint64 dist[1000 * 1001]; // distance and power left
 
 static constexpr uint64 maxULL {~0ull};
 
@@ -80,15 +85,16 @@ struct comp
 {
     bool operator() (const Node& l, const Node& r) const
     {
-        return l.time > r.time;
-    }
-};
+        if (l.time > r.time)
+        {
+            return true;
+        }
+        else if (l.time == r.time)
+        {
+            return l.power > r.power;
+        }
 
-struct compPower
-{
-    bool operator() (const AdjNode& l, const AdjNode& r) const
-    {
-        return l.time > r.time;
+        return false;
     }
 };
 
@@ -118,14 +124,13 @@ vector<long long> minTimeMaxPower(
     unsigned short next;
     unsigned short nextPower;
     uint64 currDist;
+    int index;
+    int nextIndex;
 
     bool shortestPath {false};
 
-    for (int j = 0; j < n; ++j)
-    {
-        memset(&dist[j][0], 0xFF, (power + 1) * sizeof(uint64));
-    }
-    dist[source][0] = 0ull;
+    memset(dist, 0xFF, n * (power + 1) * sizeof(uint64));
+    dist[AT(source, 0, power)] = 0ull;
 
     adjList.clear();
     adjList.resize(n);
@@ -159,21 +164,13 @@ vector<long long> minTimeMaxPower(
 
         if (temp.node == target)
         {
-            if (!shortestPath)
-            {
-                res[0] = temp.time;
-                shortestPath = true;
-            }
-
-            continue;
+            shortestPath = true;
+            break;
         }
 
         nextPower = temp.power + cost[temp.node];
-        if (
-            nextPower > power ||
-            dist[temp.node][temp.power] < temp.time ||
-            (shortestPath && temp.time != static_cast<uint64>(res[0]))
-        )
+        index = AT(temp.node, temp.power, power);
+        if (nextPower > power || dist[index] < temp.time)
         {
             continue;
         }
@@ -182,11 +179,12 @@ vector<long long> minTimeMaxPower(
         for (i = 0; i < size; ++i)
         {
             next = adjList[temp.node][i].node;
-            currDist = dist[temp.node][temp.power] + adjList[temp.node][i].time;
+            currDist = dist[index] + adjList[temp.node][i].time;
+            nextIndex = AT(next, nextPower, power);
 
-            if (dist[next][nextPower] > currDist)
+            if (dist[nextIndex] > currDist)
             {
-                dist[next][nextPower] = currDist;
+                dist[nextIndex] = currDist;
                 pq.emplace(
                     next,
                     nextPower,
@@ -196,19 +194,10 @@ vector<long long> minTimeMaxPower(
         }
     }
 
-    if (res[0] == -1ll)
+    if (shortestPath)
     {
-        return res;
-    }
-
-    size = static_cast<size_t>(power);
-    for (i = 0; i <= power; ++i)
-    {
-        if (dist[target][i] == static_cast<uint64>(res[0]))
-        {
-            res[1] = power - i;
-            break;
-        }
+        res[0] = static_cast<long long>(temp.time);
+        res[1] = static_cast<long long>(power - temp.power);
     }
 
     return res;
